@@ -1,0 +1,430 @@
+========================================================================================================
+Instalando o Angular 5 globalmente
+========================================================================================================
+
+Em qualquer pasta:
+    npm install @angular/cli -g
+
+========================================================================================================
+Criando um novo projeto
+========================================================================================================
+
+Na pasta onde deseja criar um projeto:
+    ng new ng5 --style=scss --routing
+            ^Nome do projeto
+                    ^Flag de estilo
+                                ^Integração e setup de rotas 
+
+========================================================================================================
+Compilar o projeto
+========================================================================================================
+
+Na pasta do projeto:
+    ng serve
+
+========================================================================================================
+Componentes - Base da aplicação Angular
+========================================================================================================
+
+Pasta principal:
+    src>app
+
+Componente inicial:
+    app.component.ts
+
+Estrutura do componente:
+    import { Component } from '@angular/core';  //IMPORTAÇÕES
+
+    @Component({
+    selector: 'app-root',
+    templateUrl: './app.component.html',        //DECORADOR
+    styleUrls: ['./app.component.scss']
+    })
+
+    export class AppComponent {
+    title = 'app';                              //EXPORTAÇÕES  (LÓGICA)
+    }
+
+Criando um novo componente:
+    ng generate component home
+                            ^Nome do componente
+
+Ou abreviado:
+    ng g c home
+
+Aninhando um componente novo ao componente inicial:
+    No html inicial (app.component.html):
+        <h2>Nesting: </h2>
+        <ul>
+            <li><a routerlink ="">Home</a></li>    //ROUTER: DIRETIVA QUE PERMITE MUDAR O COMPONENTE (VER ITEM ROTAS)
+            <li><a routerlink ="about">About</a></li>
+        </ul>
+        <app-home></app-home>   //SELECTOR REFERENTE AO COMPONENTE QUE VOCÊ DESEJA ANINHAR(ENCONTRADO NO ARQUIVO .TS)
+        <router-outlet></router-outlet>
+
+========================================================================================================
+Templates e Estilização
+========================================================================================================
+
+No arquivo x.component.ts:
+    Criando um template e estilizando diretamente no arquivo .ts:
+        @Component({
+            selector: 'app-home',
+            template:`
+                <p>Seu html aqui</p>    //HTML DIRETO
+            `,
+            style: [`
+            p {font-weight:bold}        //ESTILO DIRETO
+            div {color: gray}
+            `]
+        })
+
+Adicionando HTML inicial e Estilos globais:
+    HTML: em  index.html
+    SCSS: em styles.scss
+
+Adicionando HTML e Estilos em um componente:
+    HTML: em x.component.html
+    SCSS: em x.component.scss
+
+
+========================================================================================================
+Comunicação entre componentes e templates (Interpolação, Fixação de Propriedades e Fixação de Eventos)
+========================================================================================================
+
+Interpolação (Utilizada para comunicar propriedades na classe do componente [Parte LÓGICA]):
+    Em x.component.ts:
+        export class HomeComponent implements OnInit {
+            itemCount: number = 4;  //DEFINE UMA PROPRIEDADE DA CLASSE
+            constructor() { }
+            ngOnInit() {
+
+            }
+        }
+    
+    Em x.component.html:
+        <div>
+            <p>({{itemCount}})</p> //CHAMA A PROPRIEDADE POR INTERPOLAÇÃO
+        </div>
+
+Fixação de Propriedades (Utilizado para controlar uma propriedade já presente no template):
+    Em x.component.ts:
+        export class HomeComponent implements OnInit {
+            BtnText: string = 'Add Item';  //DEFINE UMA PROPRIEDADE DA CLASSE
+            constructor() { }
+            ngOnInit() {
+
+            }
+        }
+    
+    Em x.component.html:
+        <input type="submit" class="btn" [value]="BtnText"> //CHAMA A PROPRIEDADE E FIXA NUM ITEM
+
+Fixação de Propriedades em mão-dupla:
+    Em src\app\app.module.ts:
+
+        import { FormsModule } from '@angular/forms';  //IMPORTA O MÓDULO DE FORMULÁRIOS
+
+        imports: [
+            BrowserModule,
+            AppRoutingModule,
+            FormsModule  //DECLARA A IMPORTAÇÃO DO MÓDULO DE FORMULÁRIOS
+        ],
+    
+    Em x.component.ts:
+        export class HomeComponent implements OnInit {
+            GoalText: string = '';  //DEFINE UMA PROPRIEDADE DA CLASSE
+            constructor() { }
+            ngOnInit() {
+
+            }
+        }
+    
+    Em x.component.html:
+        <input type="text" class="txt" name="item" placeholder="Life Goal" [(ngModel)]="GoalText"> // USA O MÓDULO FORM PARA CAPTURAR OS DADOS
+        <br><span>{{GoalText}}</span> //FAZ O RECALL DO DADO CAPTURADO NO FORMULARIO E IMPRIME-O
+
+Fixação com eventos (Juntando os itens anteriores):
+    Em x.component.ts:
+        export class HomeComponent implements OnInit {
+            itemCount: number;  //DEFINE UMA CONTAGEM DE ITENS
+            GoalText: string = '';  //STRING DE TEXTO A SER CAPTURADO
+            BtnText: string = 'Add Item';  //STRING DECLARADA NO BOTÃO POR INTERPOLAÇÃO
+            Goals = [];  //ARRAY QUE IRÁ ARMAZENAR OS OBJETIVOS
+            constructor() { }
+
+            ngOnInit() {
+                this.itemCount = this.Goals.length; //ASSOCIANDO A CONTAGEM DE ITENS COM O COMPRIMENTO DO ARRAY GOALS
+            }
+
+            addItem() { //CRIANDO UMA FUNÇÃO ADICIONA ITENS
+                this.Goals.push(this.GoalText); //EMPURRA O TEXTO A SER CAPTURADO PARA O ARRAY GOALS
+                this.GoalText=''; //APAGA O CAMPO DE TEXTO A SER CAPTURADO
+                this.itemCount=this.Goals.length; //ATUALIZA A CONTAGEM DE ITENS
+            }
+        }
+
+    Em x.component.html:
+        <input type="text" class="txt" name="item" placeholder="Life Goal" [(ngModel)]="GoalText">
+        <br><span>{{itemCount}}</span>
+        <input type="submit" class="btn" [value]="BtnText" (click)="addItem()">
+        
+Criando um loop para utilização dos dados contidos num array:
+    Em x.component.html:
+      <p class="life-container" *ngFor="let goal of Goals"> //PARA CADA ITEM DENTRO DO ARRAY GOALS
+            {{goal}} //IMPRIMIR O ITEM DA VEZ
+      </p>
+
+Excluindo itens da lista:
+    Em x.component.html:
+        <p class="life-container" *ngFor="let goal of Goals" (click)="removeItem(i)"> //ADICIONA A LEITURA DO EVENTO
+                {{goal}} //IMPRIMIR O ITEM DA VEZ
+        </p>
+
+    Em x.component.ts:    
+        removeItem(i) {
+            this.Goals.splice(i,1);
+        }
+
+========================================================================================================
+Animações Angular
+========================================================================================================
+
+Na pasta do projeto:
+    npm install @angular/animations@latest --save
+                    ^Instala Módulo de animação
+                                            ^Salva como dependência do projeto
+
+Em app.module.ts:
+    import { BrowserAnimationsModule } from '@angular/platform-browser/animations';  //ADICIONA O MÓDULO DE ANIMAÇÕES
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        FormsModule,
+        BrowserAnimationsModule  //DECLARA A IMPORTAÇÃO DO MÓDULO AO PROJETO
+    ],
+
+Em x.component.ts:
+    import { trigger, style, transition, animate, keyframes, query, stagger } from '@angular/animations'; //PARA TRAZER FUNÇÕES DO ANIMATE
+
+    @Component({
+        selector: 'app-home',
+        templateUrl: './home.component.html',
+        styleUrls: ['./home.component.scss'],
+        animations:[
+            trigger('animationGoals',[
+                ^Inicia a criação de uma animação        
+                            ^Nome da animação
+
+            transition('*=>*',[
+                ^Ativa uma transição
+                        ^De qualquer estado para qualquer estado
+
+                query(':enter', style({opacity:0}), {optional: true}),
+                        ^Faz uma Query no DOM e, ao entrar, o item estará invisivel.
+
+                query(':enter', stagger('300ms', [
+                                ^Cria um atraso entre animações caso vários ítens entrem
+
+                animate('.6s ease-in', keyframes([
+                                ^Durante 0.6s o item passará a aparecer
+                                            ^Determina os momentos chave da animação
+
+                    style({opacity:0, transform:'translateY(-75%)', offset:0}),
+                    style({opacity:.5, transform:'translateY(-50%)', offset:.3}),
+                    style({opacity:1, transform:'translateY(0)', offset:1})
+                      ^Estiliza a animação do invisível ao opaco, de baixo para cima
+
+                ]))
+                ]), {optional: true}),
+
+                query(':leave', stagger('300ms', [
+                animate('.6s ease-in', keyframes([
+                    style({opacity:1, transform:'translateY(0)', offset:0}),
+                    style({opacity:.5, transform:'translateY(20%)', offset:.3}),
+                    style({opacity:0, transform:'translateY(-75%)', offset:1})
+                ]))
+                ]), {optional: true})  //FAZ O OPOSTO DA ANIMAÇÃO ANTERIOR
+            ])
+            ])
+        ]
+    })
+
+Em x.component.html:
+    <div class="col" [@animateGoals]="Goals.length">  //APLICA A ANIMAÇÃO NOS BLOCOS CRIADOS NO NGFOR
+      <p class="life-container" *ngFor="let goal of Goals" (click)="removeItem(i)">
+            {{goal}}
+      </p>
+    </div>
+
+========================================================================================================
+Rotas Angular
+========================================================================================================
+
+Para criar rotas:
+    Em app-routing.module.ts:
+        import { NgModule } from '@angular/core';
+        import { Routes, RouterModule } from '@angular/router';
+        import { HomeComponent } from './home/home.component';
+        import { AboutComponent } from './about/about.component';
+
+        const routes: Routes = [
+        {
+            path: '',
+            component: HomeComponent
+        },
+        {
+            path: 'about',
+            component: AboutComponent
+        }
+        ];
+
+    Em app.module.html:
+        <ul>
+            <li>
+                <a routerlink="">Home</a>
+            </li>
+            <li>
+                <a routerlink="about">About</a>
+            </li>
+        </ul>
+
+        <router-outlet></router-outlet>
+
+Acessando os parâmetros de uma rota:
+    Em app-routing.module.ts
+        const routes: Routes = [
+            {
+                path: '',
+                component: HomeComponent
+            },
+            {
+                path: 'about/:id',  //CRIA UM IDENTIFICADOR NA URL
+                component: AboutComponent
+            }
+        ];
+    
+    Em x.component.ts:
+        import { ActivatedRoute } from '@angular/router';  //IMPORTA O MÓDULO QUE ACESSA AS ROTAS
+
+        constructor(private route: ActivatedRoute) {  //INJETA NO CONSTRUTOR O MÓDULO
+            this.route.params.subscribe(res => console.log(res.id));  //UTILIZA O PARAMETRO ENCONTRADO NA ROTA
+        }         ^rota injetada         ^Resposta              ^Identificador determinado no app-routing.modules.ts
+
+Navegação em rotas por meio de componentes:
+    Em x.component.ts:
+        import { Router } from '@angular/router';  //IMPORTA MÓDULO DE ROTEAMENTO
+
+        export class AboutComponent implements OnInit {
+            constructor(private route: ActivatedRoute, private router: Router) {  //INJETA O MÓDULO NO CONSTRUTOR
+                this.route.params.subscribe(res => console.log(res.id));
+            }
+            ngOnInit() {
+            }
+            sendMeHome() {  //FUNÇÃO DE NAVEGAÇÃO
+                this.router.navigate(['']);
+            }
+
+        }
+    
+    Em x.component.html:
+        <p>
+            What I'm all about: <a href="" (click)="sendMeHome()"><Strong>Click Here!</Strong></a>
+        </p>
+
+========================================================================================================
+Criando e utilizando Serviços
+========================================================================================================
+
+Na pasta do projeto:
+    ng generate service data
+
+Em src\app\data.service.ts:
+    import { Injectable } from '@angular/core';
+    import { BehaviorSubject } from 'rxjs/BehaviorSubject';  //ADICIONA FERRAMENTA DE TRANSF DE DADOS
+
+    @Injectable()
+    export class DataService {
+
+        private Goals = new BehaviorSubject<any>(['Become a PROgrammer', 'Skydive', 'Bungee Jump']) //CRIA PROPRIEDADE
+        goal = this.Goals.asObservable();  //CRIA PROPRIEDADE
+
+        constructor() { }
+
+        changeGoal(goal) {
+            this.Goals.next(goal);  //CRIA MÉTODO ACESSÍVEL POR OUTROS COMPONENTES
+        }
+
+    }
+
+Em app.module.html:
+    import { DataService } from './data.service';  //IMPORTA O SERVIÇO
+    providers: [DataService],  //INJETA O SERVIÇO COMO UM FORNECEDOR
+
+Em x.component.ts:
+    import { DataService } from '../data.service';  //IMPORTA O SERVIÇO
+    
+    constructor(private _data: DataService) { }  //INJETA A DEPENDENCIA DO SERVIÇO
+
+    ngOnInit() {
+        this.itemCount = this.Goals.length;
+
+        this._data.goal.subscribe(res => this.Goals = res);  //TRAZ DADOS DO goal CONTIDO NO SERVIÇO PARA PROP LOCAL
+        this._data.changeGoal(this.Goals);  //ATUALIZA GOALS DO SERVIÇO
+    }
+
+    addItem() {
+        this.Goals.push(this.GoalText);
+        this.GoalText='';
+        this.itemCount=this.Goals.length;
+        this._data.changeGoal(this.Goals);  //ATUALIZA GOALS DO SERVIÇO
+    }
+
+    removeItem(i) {
+        this.Goals.splice(i,1);
+        this._data.changeGoal(this.Goals);  //ATUALIZA GOALS DO SERVIÇO
+    }
+
+========================================================================================================
+Deployment Angular
+========================================================================================================
+
+Criando build (arquivos grandes):
+    Na pasta do projeto:
+        ng build
+
+Criando build de produção (otimiza arquivos):
+    Na pasta do projeto:
+        ng build --prod
+
+Subindo o deployment em um sub-folder (Ex.xyz.com/Angular5):
+    Na pasta do projeto:
+        ng build --prod --base-href="xyz.com/Angular5"
+
+Subindo o deployment no github pages:
+    Em qualquer pasta:
+        npm install -g angular-cli-ghpages
+
+Criando repositório no Github:
+    No site:
+        Login: matheus_narito_yoneoka@hotmail.com
+        Senha: ?
+    
+    +
+        New Repository
+        Escolher URL
+        Create Repository
+
+    Quick setup:
+        Na pasta do projeto:
+        git add README.md
+        git commit -m "first commit"
+        git remote add origin https://github.com/Naarito/Angular5.git
+        git push -u origin master
+    
+    Como o Github Pages é um sub-folder:
+        ng build --prod --base-href="https://Naarito.github.io/Angular5/"
+            ^monta  ^produção               ^Define a URL baseado no seu usuário git
+    
+    Publicando o app na URL:
+        angular-cli-ghpages
